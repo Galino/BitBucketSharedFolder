@@ -7,11 +7,11 @@ DROP TABLE "Driver" CASCADE CONSTRAINTS;
 DROP TABLE "LogisticManager" CASCADE CONSTRAINTS;
 DROP TABLE "Delivery_Area" CASCADE CONSTRAINTS;
 --added
-DROP TABLE "Delivery_Area" CASCADE CONSTRAINTS;
 DROP TABLE "Customer" CASCADE CONSTRAINTS;
 DROP TABLE "OrderedMaterials" CASCADE CONSTRAINTS;
 DROP TABLE "OrderOfMaterials" CASCADE CONSTRAINTS;
 DROP TABLE "Materials" CASCADE CONSTRAINTS;
+DROP TABLE "Driver_in_area" CASCADE CONSTRAINTS;
 
 CREATE TABLE "Order"(
 "ID_order"          INTEGER,
@@ -53,8 +53,7 @@ CREATE TABLE "Baker"(
 
 CREATE TABLE "Driver"(
 "EmployeeID_PersonalNumber" INTEGER,
-"Car"                       VARCHAR(20),
-"AreaID_area"               INTEGER
+"Car"                       VARCHAR(20)
 );
 
 CREATE TABLE "LogisticManager"(
@@ -66,6 +65,11 @@ CREATE TABLE "Delivery_Area"(
 "ID_Area"                   INTEGER,
 "Name"                      VARCHAR(20),
 "StreetList"                VARCHAR(200)
+);
+
+CREATE TABLE "Driver_in_area"(
+"DriverID"                  INTEGER,
+"AreaID"                    INTEGER
 );
 
 --added
@@ -107,6 +111,7 @@ ALTER TABLE "OrderedBread" ADD PRIMARY KEY ("BreadID_Bread", "OrderID_order");
 ALTER TABLE "Bread" ADD PRIMARY KEY ("ID_Bread");
 ALTER TABLE "Employee" ADD PRIMARY KEY ("ID_PersonalNumber");
 ALTER TABLE "Delivery_Area" ADD PRIMARY KEY ("ID_Area");
+ALTER TABLE "Driver_in_area" ADD PRIMARY KEY ("DriverID", "AreaID");
 --added
 ALTER TABLE "Customer" ADD PRIMARY KEY ("ID_Customer");
 ALTER TABLE "OrderOfMaterials" ADD PRIMARY KEY ("ID_OrderOfMaterials");
@@ -121,8 +126,9 @@ ALTER TABLE "OrderedBread" ADD FOREIGN KEY ("BreadID_Bread") REFERENCES "Bread"(
 --ALTER TABLE "Bread" ADD FOREIGN KEY ("MaterialsID_Material") REFERENCES "Materials"("ID_Material"); --need to check
 ALTER TABLE "LogisticManager" ADD FOREIGN KEY ("EmployeeID_PersonalNumber") REFERENCES "Employee"("ID_PersonalNumber");
 ALTER TABLE "Driver" ADD FOREIGN KEY ("EmployeeID_PersonalNumber") REFERENCES "Employee"("ID_PersonalNumber");
-ALTER TABLE "Driver" ADD FOREIGN KEY ("AreaID_area") REFERENCES "Delivery_Area"("ID_Area");
 ALTER TABLE "Baker" ADD FOREIGN KEY ("EmployeeID_PersonalNumber") REFERENCES "Employee"("ID_PersonalNumber");
+ALTER TABLE "Driver_in_area" ADD FOREIGN KEY ("DriverID") REFERENCES "Employee" ("ID_PersonalNumber");
+ALTER TABLE "Driver_in_area" ADD FOREIGN KEY ("AreaID") REFERENCES "Delivery_Area" ("ID_Area");
 --added
 ALTER TABLE "Customer" ADD FOREIGN KEY ("Delivery_AreaID_Area") REFERENCES "Delivery_Area"("ID_Area");
 ALTER TABLE "OrderOfMaterials" ADD FOREIGN KEY ("EmployeeID_PersonalNumber") REFERENCES "Employee"("ID_PersonalNumber");
@@ -146,6 +152,18 @@ VALUES (2, 'Rohlík grahamový', 6.50);
 INSERT INTO "Bread" ("ID_Bread", "Name", "Cost")
 VALUES (3, 'Buchta s lekvárem', 12);
 
+-- Customer
+INSERT INTO "Customer"
+VALUES (50, 'Miroslav Jarný', 'Kolejní 2 Brno 602 00', 'mjarny@email.com', '0000', 2);
+
+--Order
+INSERT INTO "Order" -- uncommented
+VALUES (300, '2.2.1999', '21.2.1999', 'personal', 'Kolejni 2 Brno 602 00', 'no',50 );
+
+-- OrderedBread
+INSERT INTO "OrderedBread" 
+VALUES (300,3,5);
+
 -- Employees
 INSERT INTO "Employee" 
 VALUES (100, '990101/1234', 'Michal Novotný', '1.1.1999','Kolejni 6 Brno 602 00','1234567891234567','full-time', '15000');
@@ -154,13 +172,27 @@ VALUES (100, 122);
 INSERT INTO "Employee" 
 VALUES (200, '991010/1234', 'Ladislav Pochmúrny', '10.10.1999','6. apríla 333 Vrbové 922 03 SR','1234567891231234','full-time', '15000');
 INSERT INTO "Baker"
-VALUES (200, 'Hlavní p?c');
+VALUES (200, 'Hlavní pec');
+INSERT INTO "Employee" 
+VALUES (300, '990202/1234', 'Peter Chromý', '02.02.1999','Purkyòova 93, 612 00 Brno','4321567891231234','full-time', '14000');
+INSERT INTO "Driver"
+VALUES (300, 'Fiat Punto');
 
--- Customer
-INSERT INTO "Customer"
-VALUES (50, 'Miroslav Jarný', 'Kolejní 2 Brno 602 00', 'mjarny@email.com', '0000', 2);
 
---Order
-INSERT INTO "Order" -- uncommented
---added
-VALUES (300, '2.2.1999', '21.2.1999', 'personal', 'Kolejni 2 Brno 602 00', 'no',50 );
+--Driver in arae
+INSERT INTO "Driver_in_area"
+VALUES (300,2);
+INSERT INTO "Driver_in_area"
+VALUES (300,1);
+
+--Materials
+INSERT INTO "Materials"
+VALUES (20, 'Mouka', 10, '31.12.2017');
+
+--OrderofMaterials
+INSERT INTO "OrderOfMaterials"
+VALUES(27, sysdate, 100);
+
+-- Oredered Materials
+INSERT INTO "OrderedMaterials"
+VALUES(27, 20, 20, 20.50);
