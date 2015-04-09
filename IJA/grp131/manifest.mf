@@ -1,0 +1,5 @@
+Manifest-Version: 1.0
+Class-Path: dest-client/Homework3.jar
+Created-By: 1.5.0_05-b05 (Sun Microsystems Inc.)
+Ant-Version: Apache Ant 1.6.2
+Main-Class: ija.homework3.Homework3

@@ -196,3 +196,5 @@ VALUES(27, sysdate, 100);
 -- Oredered Materials
 INSERT INTO "OrderedMaterials"
 VALUES(27, 20, 20, 20.50);
+
+COMMIT;
