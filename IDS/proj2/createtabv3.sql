@@ -160,15 +160,38 @@ VALUES (3, 'Buchta s lekvárem', 12);
 
 -- Customer
 INSERT INTO "Customer"
-VALUES (50, 'Miroslav Jarný', 'Brno','Kolejní 2 ' , '602 00', 'mjarny@email.com', '0000', 2);
+VALUES (50, 'Miroslav Jarný', 'Brno','Kolejní 2' , '602 00', 'mjarny@email.com', '0000', 1);
+
+INSERT INTO "Customer"
+VALUES (55, 'Lukáš Luvický', 'Brno','Vinohrady' , '602 00', 'luvicky@email.com', '0000', 2);
+INSERT INTO "Customer"
+VALUES (60, 'David Michal', 'Brno','Kamenice' , '602 00', 'dm@email.com', '0000', 2);
 
 --Order
 INSERT INTO "Order" -- uncommented
 VALUES (300, '2.2.1999', '21.2.1999', 'personal', 'Brno', 'Kolejní 2 ', '602 00', 'no',50 );
 
+INSERT INTO "Order" 
+VALUES (301, '5.2.1999', '20.3.1999', 'onAddress', 'Brno', 'Vinohrady', '602 00', 'no',55 );
+
+INSERT INTO "Order" 
+VALUES (302, '10.3.1999', '10.5.1999', 'onAddress', 'Brno', 'Kamenice', '602 00', 'no',60 );
+
 -- OrderedBread
 INSERT INTO "OrderedBread" 
 VALUES (300,3,5);
+
+INSERT INTO "OrderedBread" 
+VALUES (300,2,20);
+
+INSERT INTO "OrderedBread" 
+VALUES (301,1,50);
+
+INSERT INTO "OrderedBread" 
+VALUES (301,3,60);
+
+INSERT INTO "OrderedBread" 
+VALUES (302,1,10);
 
 -- Employees
 INSERT INTO "Employee" 
@@ -197,16 +220,35 @@ VALUES (20, 'Mouka', 10, '31.12.2017');
 INSERT INTO "Materials"
 VALUES (30, 'Vejce', 5, '30.12.2017');
 INSERT INTO "Materials"
-VALUES (40, 'Mouka', 5, '30.12.2017');
+VALUES (40, 'Syr', 5, '30.12.2017');
 
 
 -- OrderofMaterials
 INSERT INTO "OrderOfMaterials"
-VALUES(27, '10.2.2014', 100);
+VALUES(27, '10.2.2012', 100);
+
+INSERT INTO "OrderOfMaterials"
+VALUES(28, '10.2.2014', 100);
+
+-- Objednavka syru a muky
+INSERT INTO "OrderOfMaterials"
+VALUES(29, '10.2.2013', 100);
 
 -- Oredered Materials
 INSERT INTO "OrderedMaterials"
 VALUES(27, 20, 20, 20.50);
+
+INSERT INTO "OrderedMaterials"
+VALUES(28, 30, 20, 3.30);
+
+INSERT INTO "OrderedMaterials"
+VALUES(28, 40, 10, 20.50);
+
+INSERT INTO "OrderedMaterials"
+VALUES(29, 20, 100, 16);
+
+INSERT INTO "OrderedMaterials"
+VALUES(29, 40, 100, 4);
 
 
 -- date: 8.4.2015
@@ -258,10 +300,23 @@ SELECT OOM."ID_OrderOfMaterials"
 FROM "OrderedMaterials" OM, "OrderOfMaterials" OOM,"Materials" M
 WHERE OM."MaterialsID_Material" = M."ID_Material" AND OOM."ID_OrderOfMaterials" = OM."OMID_OrderOfMaterials" AND
 	M."Name" = 'Mouka' AND NOT EXISTS (SELECT OOM."ID_OrderOfMaterials"
-									 FROM "OrderedMaterials" OM, "OrderOfMaterials" OOM, "Materials" M
+									 FROM "OrderedMaterials" OM, "Materials" M
 									 WHERE OM."MaterialsID_Material" = M."ID_Material" AND OOM."ID_OrderOfMaterials" = OM."OMID_OrderOfMaterials" AND
-										M."Name" = 'Vejce' );
+										M."Name" = 'Vejce' );                
+--  1x IN
 
-
+-- Ktorá objednávka (Order) objednávala peèivo s názvom 'Chleba bíly'
+SELECT O."ID_order", O."Date"
+FROM "Order" O
+WHERE O."ID_order" IN(
+  SELECT OB."OrderID_order"
+  FROM "OrderedBread" OB
+  WHERE OB."BreadID_Bread" IN(
+    SELECT B."ID_Bread"
+    FROM "Bread" B
+    WHERE B."Name" = 'Chleba bíly'
+  )
+);
+COMMIT;
 
 ------------------------------------------------------------------------------------------------------------------------------------------------------
