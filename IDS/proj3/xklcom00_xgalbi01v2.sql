@@ -14,6 +14,14 @@ DROP TABLE "OrderedMaterials" CASCADE CONSTRAINTS;
 DROP TABLE "OrderOfMaterials" CASCADE CONSTRAINTS;
 DROP TABLE "Materials" CASCADE CONSTRAINTS;
 DROP TABLE "Driver_in_area" CASCADE CONSTRAINTS;
+DROP INDEX B_Cost_Index;
+DROP INDEX OB_Amount_Index;
+DROP MATERIALIZED VIEW LOG ON "Delivery_Area";
+DROP MATERIALIZED VIEW LOG ON "Customer";
+DROP MATERIALIZED VIEW "Customer_Area";
+
+GRANT ALL ON "Customer" TO xgalbi01;
+GRANT ALL ON "Delivery_Area" TO xgalbi01;
 
 CREATE TABLE "Order"(
 "ID_order"          		INTEGER,
@@ -150,7 +158,7 @@ ALTER TABLE "Employee" ADD CONSTRAINT "chck_birth_number" CHECK (regexp_like("Bi
 -- ============================================================================
 -- ============================================================================
 
-
+-- Trigger n.1
 -- pri odstraneni zakaznika z databazy sa zrusia aj jeho objednavky  
 -- (vymze sa zaznam z order a o danej order sa vymaze zaznam z OrderedBread)
 CREATE OR REPLACE TRIGGER "Customer_Remover"  BEFORE DELETE ON "Customer"
@@ -166,30 +174,9 @@ BEGIN
 END;
 /
 
-
+-- Trigger n.2
 -- Vytvorennie sequence a autoinkrementacie nad ID Bread
-
-
--- skopirovane z netu, malo by vynulovat sequence
-create or replace procedure reset_seq( p_seq_name in varchar2 )
-is
-    l_val number;
-begin
-    execute immediate
-    'select ' || p_seq_name || '.nextval from dual' INTO l_val;
-
-    execute immediate
-    'alter sequence ' || p_seq_name || ' increment by -' || l_val || 
-                                                          ' minvalue 0';
-
-    execute immediate
-    'select ' || p_seq_name || '.nextval from dual' INTO l_val;
-
-    execute immediate
-    'alter sequence ' || p_seq_name || ' increment by 1 minvalue 0';
-end;
-/
-
+DROP SEQUENCE seq;
 CREATE SEQUENCE seq;
 --EXEC reset_seq('seq');
 
@@ -245,6 +232,7 @@ BEGIN
     CLOSE c_employee;
 END;
 /
+
 -- ============================================================================
 -- ============================================================================
 
@@ -368,86 +356,45 @@ VALUES(29, 20, 100, 16);
 
 INSERT INTO "OrderedMaterials"
 VALUES(29, 40, 100, 4);
-/*
-
--- date: 8.4.2015
-
-
--- 2x SELECT nad dvoma tabu¾kami
-
--- Ktorí zákazníci sú pridelení oblasti Technologický Park ?
-SELECT C."ID_Customer", C."Name" 
-FROM "Customer" C, "Delivery_Area" DA
-WHERE C."Delivery_AreaID_Area" = DA."ID_Area" AND DA."Name" = 'Technologický park';
-
---  Ktori pekári majú plat menší ako 8000 ?  
-SELECT E."ID_PersonalNumber", E."Name"
-FROM "Employee" E, "Baker" B
-WHERE E."ID_PersonalNumber" = B."EmployeeID_PersonalNumber" AND E."Salary" < 8000;
-------------------------------------------------------------------------------------------------------------------------------------------------------
-
--- 1x SELECT nad troma tabuk¾kami
-
--- Aký materiál sa objednával 10.2.2014 ? 
-SELECT M."Name"
-FROM "OrderedMaterials" OM, "OrderOfMaterials" OOM, "Materials" M
-WHERE OM."MaterialsID_Material" = M."ID_Material" AND OOM."ID_OrderOfMaterials" = OM."OMID_OrderOfMaterials" AND OOM."Date" = '10.2.2014' ;
-------------------------------------------------------------------------------------------------------------------------------------------------------
-
-
--- 2x GROUP BY + agregaèná funkcia
-
--- Ko¾ko a akého tovaru sa objednávalo za rok 2014
-SELECT M."ID_Material", M."Name", SUM("Amount") "Mnozstvi"
-FROM "OrderedMaterials" OM, "OrderOfMaterials" OOM, "Materials" M
-WHERE OM."MaterialsID_Material" = M."ID_Material" AND OOM."ID_OrderOfMaterials" = OM."OMID_OrderOfMaterials" 
-	AND OOM."Date" BETWEEN '1.1.2014' AND '31.12.2014'
-GROUP BY "ID_Material", "Name";
-
--- Ko¾ko Zákazníkov je v akej Delivery Area k ?
-SELECT DA."ID_Area", DA."Name", COUNT("ID_Customer") "celkem"
-FROM "Delivery_Area" DA, "Customer" C
-WHERE C."Delivery_AreaID_Area" = DA."ID_Area" 
-GROUP BY "ID_Area", DA."Name";
-------------------------------------------------------------------------------------------------------------------------------------------------------
-
-
---  1x EXIST
-
--- Ktoré objednávky obsahovali múku ale nie vajcia ? 
-SELECT OOM."ID_OrderOfMaterials"
-FROM "OrderedMaterials" OM, "OrderOfMaterials" OOM,"Materials" M
-WHERE OM."MaterialsID_Material" = M."ID_Material" AND OOM."ID_OrderOfMaterials" = OM."OMID_OrderOfMaterials" AND
-	M."Name" = 'Mouka' AND NOT EXISTS (SELECT OOM."ID_OrderOfMaterials"
-									 FROM "OrderedMaterials" OM, "Materials" M
-									 WHERE OM."MaterialsID_Material" = M."ID_Material" AND OOM."ID_OrderOfMaterials" = OM."OMID_OrderOfMaterials" AND
-										M."Name" = 'Vejce' );                
---  1x IN
-
--- Ktoré objednávky (Order) objednávali peèivo s názvom 'Chleba bíly'
-SELECT O."ID_order", O."Date"
-FROM "Order" O
-WHERE O."ID_order" IN(
-  SELECT OB."OrderID_order"
-  FROM "OrderedBread" OB
-  WHERE OB."BreadID_Bread" IN(
-    SELECT B."ID_Bread"
-    FROM "Bread" B
-    WHERE B."Name" = 'Chleba bíly'
-  )
-);
-*/
-
-
---vytvorenie indexov
---CREATE INDEX B_Cost_Index ON "Bread"("Cost");
---CREATE INDEX OB_Amount_Index ON "OrderedBread"("Amount");
-
 
 --EP pre zobrazenie celkovej ceny objednávok 
 EXPLAIN PLAN FOR 
-SELECT O."ID_order", sum(B."Cost" * OB."Amount") AS "FinalCost"  FROM "Order" O, "Bread" B, "OrderedBread" OB
+SELECT O."ID_order", sum(B."Cost" * OB."Amount") AS "FinalCost"  FROM "Order" O,  "OrderedBread" OB, "Bread" B
 WHERE O."ID_order" = OB."OrderID_order" AND OB."BreadID_Bread" = B."ID_Bread"
 GROUP BY "ID_order";
 
+SELECT plan_table_output FROM TABLE (dbms_xplan.display());
+
+--vytvorenie indexov
+CREATE INDEX B_Cost_Index ON "Bread"("Cost");
+CREATE INDEX OB_Amount_Index ON "OrderedBread"("Amount");
+
+--EP pre zobrazenie celkovej ceny objednávok 
+EXPLAIN PLAN FOR 
+SELECT O."ID_order", sum(B."Cost" * OB."Amount") AS "FinalCost"  FROM "Order" O,  "OrderedBread" OB, "Bread" B
+WHERE O."ID_order" = OB."OrderID_order" AND OB."BreadID_Bread" = B."ID_Bread"
+GROUP BY "ID_order";
+
+SELECT plan_table_output FROM TABLE (dbms_xplan.display());
+
+-- Materialized view - ktory zakaznik patri do akej delivery area
+CREATE MATERIALIZED VIEW LOG ON "Delivery_Area" WITH ROWID;
+CREATE MATERIALIZED VIEW LOG ON "Customer" WITH ROWID;
+
+-- tento pohlad treba vytvorit pod uctom test_galbi
+CREATE MATERIALIZED VIEW "Customer_Area"
+CACHE
+BUILD IMMEDIATE
+REFRESH FAST ON COMMIT
+ENABLE QUERY REWRITE
+AS
+  SELECT CU."ID_Customer", CU."Name" AS "Cust_Name", DA."Name" AS "DA_Name", CU.ROWID AS "Cust_ROWID", DA.ROWID AS "DA_ROWID" 
+  FROM "Customer" CU, "Delivery_Area" DA
+  WHERE CU."Delivery_AreaID_Area" = DA."ID_Area";
+  
+EXPLAIN PLAN FOR
+  SELECT CU."ID_Customer", CU."Name" AS "Cust_Name", DA."Name" AS "DA_Name", CU.ROWID AS "Cust_ROWID", DA.ROWID AS "DA_ROWID" 
+  FROM "Customer" CU, "Delivery_Area" DA
+  WHERE CU."Delivery_AreaID_Area" = DA."ID_Area";
+  
 SELECT plan_table_output FROM TABLE (dbms_xplan.display());
