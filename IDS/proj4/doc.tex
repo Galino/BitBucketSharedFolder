@@ -1,0 +1,31 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[left=2cm,text={17cm, 24cm},top=2.5cm]{geometry}
+\usepackage[czech]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage{times}
+
+\title{IDS projekt\\[0pt]Pekárna}
+\author{Michal Klčo, Lukáš Galbička\\[0pt]xklcom00@stud.fit.vutbr.cz, xgalbi01@stud.fit.vutbr.cz}
+\date{}
+
+\begin{document}
+\maketitle
+\section*{Popis}
+Skript vytvára a upravuje schému databázy pre informačný systém pekárne. Táto databáza uchováva informácie o zaregistrovaných zákazníkoch, ich objednávkach, pečive, zamestnancoch, materialoch, objednávkach materiálov a pod.. Skript taktiež vytvára rôzne ošetrenia proti porušeniu intergrity a optimalizačné vylepšenia.
+
+\section*{Trigger}
+Prvý trigger \texttt{Customer\_Remover} implementovaný v skripte zabezpečuje zachovanie integrity dát pri vymazávaní dát z tabuľky \texttt{Customer}. V prípade, že by sa vymazal záznam bez tohto ošetrenia, záznami v tabuľke \texttt{Order} by mali neplatné cudzie kľúče (odkazovali by na neexistujúci záznam). Trigger teda vymaže aj záznamy z tabuľky \texttt{Order}, ale aj z tabuľky \texttt{OrderedBread}, keďže obsahujú cudzí kľúč odkazujúci sa na záznamy z tabuľky \texttt{Order}. 
+
+Ďalší trigger \texttt{auto\_inc} spôsobuje implictné nastavenie primárneho kľúča v prípade, že sa vloží nový záznam do tabuľky \texttt{Bread} a nezadá sa hodnota primárneho kľúča explicitne (alebo zadá \texttt{NULL}). Použité hodnoty sa získavajú zo sequencie \texttt{seq} príkazom \texttt{NEXTVAL}.
+
+\section*{Procedure}
+Procedúra \texttt{IsEnough} s jedným vstupným parametrom (meno materiálu) vypisuje stav a správu na základe množstva materiálu v tabuľke \texttt{Materials}. Ak je množstvo daného materiálu na sklade pod určitú úrověň, procedúra vypiše správu o nedostatku. Procedúra zachytáva výnimku \texttt{NO\_DATA\_FOUND} v prípade, že ako vstupný argument bol zadaný názov materiálu, ktorý sa nenachádza v tabuľke \texttt{Materials}.
+
+Taktiež procedúra \texttt{Salary} je implementovaná s jedným vstupným parametrom, ktorý predstavuje minimálnu hranicu platu zamestnanca, ktorý má byť vypísaný. V deklaračnej časti je vytvorený kurzor príkazom \texttt{SELECT}, ktorý vyberá všetky záznamy z tabuľky \texttt{Employee}. Pomocou podmieneného príkazu som potom vypísané len požadované záznamy.
+
+\section{Explain plan a index}
+Vytvorili sme požiadavku pre výpis všetkých objednávok pečiva a celkovej ceny (s použitím SUM). Tento príkaz \texttt{SELECT} pracuje nad tromi tabuľkami. Výpis z \texttt{EXPLAIN PLAN} nás informuje o tom, že metódou spojenia pri vykonávaní tohto príkazu je Hash Joins, ktorá je často použitá so spojením \texttt{INNER JOIN} (v našom prípade s klauzulou \texttt{WHERE}). Optimalizátor zvolil priamy prístup k tabuľkám Full Table Scan - obyčajné prechádzanie tabuľkami. Vytvorením dvoch indexov nad dvoma stĺpcami, z ktorých je braná hodnota pre výpočet celkovej ceny objednávky sme docieli to, že optimalizér pristupuje k tabuľkám pomocou Index Fast Full Scans, Index Unique Scans a Table Access by Rowid. Výraznejšie zrýchlevnie by však bolo pozorovateľné až pri väčšom počte záznamov v tabuľkách. 
+
+\section*{Materialized view a prístupové práva}
+Po pridelení prístupových práv uživateľovi xgalbi01, tento uživateľ vytvorí materializovaný pohľad z údajov z tabuliek uživateľa xklcom00. Pomocou príkazu \texttt{SELECT} nad týmto pohľadom má tak uživateľ efektívny prístup k záznamom z iných tabuliek.
+\end{document}
