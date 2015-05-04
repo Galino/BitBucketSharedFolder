@@ -389,12 +389,12 @@ REFRESH FAST ON COMMIT
 ENABLE QUERY REWRITE
 AS
   SELECT CU."ID_Customer", CU."Name" AS "Cust_Name", DA."Name" AS "DA_Name", CU.ROWID AS "Cust_ROWID", DA.ROWID AS "DA_ROWID" 
-  FROM "Customer" CU, "Delivery_Area" DA
+  FROM xklcom00."Customer" CU, xklcom00."Delivery_Area" DA
   WHERE CU."Delivery_AreaID_Area" = DA."ID_Area";
   
 EXPLAIN PLAN FOR
   SELECT CU."ID_Customer", CU."Name" AS "Cust_Name", DA."Name" AS "DA_Name", CU.ROWID AS "Cust_ROWID", DA.ROWID AS "DA_ROWID" 
-  FROM "Customer" CU, "Delivery_Area" DA
+  FROM xklcom00."Customer" CU, xklcom00."Delivery_Area" DA
   WHERE CU."Delivery_AreaID_Area" = DA."ID_Area";
   
 SELECT plan_table_output FROM TABLE (dbms_xplan.display());
