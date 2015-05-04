@@ -1,4 +1,4 @@
-
+ 
 
 DROP TABLE "Order" CASCADE CONSTRAINTS;
 DROP TABLE "OrderedBread" CASCADE CONSTRAINTS;
@@ -439,8 +439,15 @@ WHERE O."ID_order" IN(
 */
 
 
+--vytvorenie indexov
+--CREATE INDEX B_Cost_Index ON "Bread"("Cost");
+--CREATE INDEX OB_Amount_Index ON "OrderedBread"("Amount");
 
-CREATE INDEX B_Index ON "Bread"("Name");
 
-EXPLAIN PLAN FOR SELECT "Name" FROM "Break"
+--EP pre zobrazenie celkovej ceny objednávok 
+EXPLAIN PLAN FOR 
+SELECT O."ID_order", sum(B."Cost" * OB."Amount") AS "FinalCost"  FROM "Order" O, "Bread" B, "OrderedBread" OB
+WHERE O."ID_order" = OB."OrderID_order" AND OB."BreadID_Bread" = B."ID_Bread"
+GROUP BY "ID_order";
+
 SELECT plan_table_output FROM TABLE (dbms_xplan.display());
