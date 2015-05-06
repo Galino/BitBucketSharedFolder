@@ -8,7 +8,12 @@
 
 package ija.homework2.board;
 
-import java.util.Random;
+//import ija.homework1.treasure.TreasureCard;
+
+import ija.homework2.board.MazeCard.CANGO;
+
+import java.util.*;
+
 /**
  * Class represents game board with fields.
  * @author Michal Klco
@@ -137,25 +142,162 @@ public class MazeBoard {
 	 * Method creates new game.
 	 * It generates MazeCards on fields and create free card.
 	 */
-	public void newGame(){
+	public void newGame()
+	{
 		int rand;
 		Random rdGen = new Random();
-		for(int i = 0; i < this.size; i++){
-			for(int j = 0; j < this.size; j++){
-				rand = rdGen.nextInt(3);
-				switch(rand){
-				case 0:
-					this.fields[i][j].putCard(MazeCard.create("C"));
-					break;
-				case 1:
-					this.fields[i][j].putCard(MazeCard.create("L"));
-					break;
-				case 2:
-					this.fields[i][j].putCard(MazeCard.create("F"));
-					break;
+		LinkedList<MazeCard> allOthers = new LinkedList<MazeCard>();
+		int Ccard =  (this.size*this.size)/3;
+		int Fcard = (this.size*this.size)/3;
+		
+		for(int i = 0; i < this.size; i++)
+		{
+			for(int j = 0; j < this.size; j++)
+			{
+				
+				// Putting "C" cards on corners of board
+				if ( i == 0 && j == 0)
+				{
+					MazeCard card = MazeCard.create("C");
+					card.turnRight();
+					card.turnRight();
+					this.fields[i][j].putCard(card);
+					Ccard--;
+					
 				}
-			}
+				else if (i == 0 && j == this.size-1)
+				{
+					MazeCard card = MazeCard.create("C");
+					card.turnRight();
+					card.turnRight();
+					card.turnRight();
+					this.fields[i][j].putCard(card);
+					Ccard--;
+				}
+				else if (i == this.size-1 && j == 0)
+				{
+					MazeCard card = MazeCard.create("C");
+					card.turnRight();
+					this.fields[i][j].putCard(card);
+					Ccard--;
+				}
+				else if (i == this.size-1 && j == this.size-1)
+				{
+					MazeCard card = MazeCard.create("C");
+					// no need to rotate
+					this.fields[i][j].putCard(card);
+					Ccard--;
+				}
+				
+				
+				
+				// Putting "F" cards on their positions
+				else if (i == 0 && j%2 == 0)			//up edge
+				{
+					MazeCard card = MazeCard.create("F");
+					card.turnRight();
+					card.turnRight();
+					this.fields[i][j].putCard(card);
+					Fcard--;
+				}				
+				else if (i%2 == 0 && j == 0)			//left edge
+				{
+					MazeCard card = MazeCard.create("F");
+					card.turnRight();
+					this.fields[i][j].putCard(card);
+					Fcard--;
+				}
+				else if (i == this.size-1 && j%2 == 0)		//down edge
+				{
+					MazeCard card = MazeCard.create("F");
+					// no need to rotate
+					this.fields[i][j].putCard(card);
+					Fcard--;
+				}
+				else if (i%2 == 0 && j == this.size-1)		//right edge
+				{
+					MazeCard card = MazeCard.create("F");
+					card.turnRight();
+					card.turnRight();
+					card.turnRight();
+					this.fields[i][j].putCard(card);
+					Fcard--;
+				}
+				else if (i%2 == 0 && j%2 == 0)			// inwards (yeah, inward !)
+				{
+					MazeCard card = MazeCard.create("F");
+					rand = rdGen.nextInt(4);
+					for (int k = 0; k < rand; k++)
+						card.turnRight();
+					this.fields[i][j].putCard(card);
+					Fcard--;
+				}
+				else // create linked list of all others cards
+				{
+					if (Ccard > 0)
+					{
+						MazeCard card = MazeCard.create("C");
+						allOthers.add(card);
+						Ccard--;
+					}
+					else if (Fcard > 0)
+					{
+						MazeCard card = MazeCard.create("F");
+						allOthers.add(card);
+						Fcard--;
+					}
+					else
+					{
+						MazeCard card = MazeCard.create("L");
+						allOthers.add(card);
+					}
+				}				
+			} // end of for(j)
+		} // end of for(i)
+		
+		//---------------------------------------------------------------
+		
+		// shuffle list of all others cards (copied from CardPack)
+		Random rd = new Random();
+		int newPosition;
+		for(int x = 0; x < this.size; x++)
+		{
+			newPosition = rd.nextInt(this.size);
+			MazeCard card = allOthers.get(newPosition);
+			allOthers.set(newPosition, allOthers.get(x));
+			allOthers.set(x, card);
 		}
+		
+		// putting all others cards from shuffled list
+		for(int i = 0; i < this.size; i++)
+		{
+			for(int j = 0; j < this.size; j++)
+			{
+				if (j%2 == 1)
+				{
+					MazeCard card = allOthers.pollFirst();
+					
+					rand = rdGen.nextInt(4);	//rotate card random times
+					for (int k = 0; k < rand; k++)
+						card.turnRight();
+					
+					this.fields[i][j].putCard(card);
+				}
+				else if (i%2 == 1 && j%2 == 0)
+				{
+						MazeCard card = allOthers.pollFirst();
+					
+						rand = rdGen.nextInt(4);	//rotate card random times
+						for (int k = 0; k < rand; k++)
+							card.turnRight();
+						
+						this.fields[i][j].putCard(card);
+				}
+			} // end of for(j)
+		} // end of for(i)
+		
+		
+		//generate freeCard
 		rand = rdGen.nextInt(3);
 		if(rand == 0){
 			this.freeCard = MazeCard.create("L");
@@ -165,6 +307,175 @@ public class MazeBoard {
 		}
 		else if(rand == 2){
 			this.freeCard = MazeCard.create("F");
+		}		
+	}
+
+	public boolean path(MazeField src, MazeField dst)
+	{
+		int x = src.row();
+		int y = src.col();
+		
+		int x_dst = dst.row();
+		int y_dst = dst.col();
+		
+		Stack<MazeField> closed = new Stack<MazeField>();
+		Stack<MazeField> done = new Stack<MazeField>();
+		
+		//System.out.println("Dest coord:\n\tx_dst = " + x_dst + "\n\ty_dst = " + y_dst + "\n");
+		while (true)
+		{
+			//System.out.print("\n=======================================================\n");
+			//System.out.print("My coord:\n\tx = " + x + "\n\ty = " + y + "\n");
+			if (this.get(x,y) == this.get(x_dst,y_dst))
+				return true;
+			
+			//System.out.print("Look of actual MazeCard:\n\t");
+			//MazeCard mc = this.get(x,y).getCard();
+			//String card;
+		/*	card = "|";
+			if(mc.canGo(CANGO.LEFT)){
+				card += "-";
+			}
+			else{
+				card += " ";
+			}
+			if(mc.canGo(CANGO.UP)){
+				card += "'";
+			}
+			else{
+				card += " ";
+			}
+			if(mc.canGo(CANGO.DOWN)){
+				card += ",";
+			}
+			else{
+				card += " ";
+			}
+			if(mc.canGo(CANGO.RIGHT)){
+				card += "-";
+			}
+			else{
+				card += " ";
+			}
+			card += "|";
+			System.out.print(card+"\n");
+			*/
+			if (this.get(x,y).getCard().canGo(MazeCard.CANGO.LEFT))
+			{
+			//	System.out.print("I can go left\n");
+				if (y-1 > 0)
+				{
+					if (this.get(x,y-1).getCard().canGo(MazeCard.CANGO.RIGHT))
+					{
+						//System.out.print("Then come to my right\n");
+						
+						if (closed.search(this.get(x,y-1)) < 0)
+						{
+							if(done.search(this.get(x,y-1)) < 0)
+							{
+							//	System.out.println("GO LEFT");
+								closed.push(this.get(x,y));
+								y--;
+								continue;
+							}
+						}
+						
+					}
+				}
+			}
+			if (this.get(x,y).getCard().canGo(MazeCard.CANGO.UP))
+			{
+			//	System.out.print("I can go up\n");
+				if (x-1 > 0)
+				{
+					if (this.get(x-1,y).getCard().canGo(MazeCard.CANGO.DOWN))
+					{
+					//	System.out.print("Then come to my down\n");
+						if (closed.search(this.get(x-1,y)) < 0)
+						{
+							if(done.search(this.get(x-1,y)) < 0)
+							{
+						//		System.out.println("GO UP");
+								closed.push(this.get(x,y));
+								x--;
+								continue;
+							}
+						}
+						
+					}
+				}
+			}
+			if (this.get(x,y).getCard().canGo(MazeCard.CANGO.RIGHT))
+			{
+			//	System.out.print("I can go right\n");
+			//	System.out.println("1");
+				if (y+1 <= this.size)
+				{
+					//System.out.println("2");
+					if (this.get(x,y+1).getCard().canGo(MazeCard.CANGO.LEFT))
+					{
+					//	System.out.print("Then come to my left\n");
+					//	System.out.println("3");
+						if (closed.search(this.get(x,y+1)) < 0)
+						{
+						//	System.out.println("4");
+							if(done.search(this.get(x,y+1)) < 0)
+							{
+							//	System.out.println("5");
+								//System.out.println("GO RIGHT");
+								closed.push(this.get(x,y));
+								y++;
+								continue;
+							}
+						}
+						
+					}
+				}
+			}
+			if (this.get(x,y).getCard().canGo(MazeCard.CANGO.DOWN))
+			{
+			//	System.out.print("I can go down\n");
+				if (x+1 <= this.size)
+				{
+					if (this.get(x+1,y).getCard().canGo(MazeCard.CANGO.UP))
+					{
+					//	System.out.print("Then come to my up\n");
+					//	System.out.println("I can go up !");
+						if (closed.search(this.get(x+1,y)) < 0)
+						{
+							if(done.search(this.get(x+1,y)) < 0)
+								{
+								//	System.out.println("We love each other !!!");
+									//System.out.println("GO DOWN");
+									closed.push(this.get(x,y));
+									x++;
+									continue;
+								}
+						}
+						
+					}
+				}
+			}
+			
+			
+			done.push(this.get(x,y));	 // push it to done ("I was there and couldn't go any further..")
+			if (!closed.empty()) 			//("...so if I can ,...")
+			{	
+				x = closed.peek().row();
+				y = closed.peek().col();
+			//	System.out.print("GO BACK on\n\tx = "+ x + "\n\ty = " + y + "\n");
+				closed.pop();				// pop it from closed ("..I make  a step back ")
+				continue;
+			}
+			
+			
+			
+			if (x == src.row() && y == src.col())
+				return false;
+			
+			//System.out.print("HAVE TO BREAK IT !!!\n");
+			break;
 		}
+		return false;
 	}
 }
