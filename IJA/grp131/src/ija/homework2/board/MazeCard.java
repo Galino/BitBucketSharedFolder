@@ -8,6 +8,7 @@
 
 package ija.homework2.board;
 
+import ija.homework1.treasure.*;
 import java.awt.Graphics2D;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
@@ -26,6 +27,7 @@ public class MazeCard {
 	CANGO firstDir;
 	CANGO secondDir;
 	CANGO thirdDir;
+	Treasure trs;
 	
 	private ImageIcon img;
 	
@@ -39,11 +41,12 @@ public class MazeCard {
 	 * @return	created card.
 	 * @throws IllegalArgumentException
 	 */
-	public static MazeCard create(String type) throws IllegalArgumentException{
+	public static MazeCard create(String type, Treasure trs) throws IllegalArgumentException{
 		if(type != "C" && type != "L" && type != "F")
 			throw new IllegalArgumentException("Argmument "+type+" is not valid");
 		MazeCard card = new MazeCard();
 		card.type = type;
+		card.trs = trs;
 		switch(type){
 			case "C":
 				card.firstDir = CANGO.UP;
@@ -160,5 +163,13 @@ public class MazeCard {
 	
 	public ImageIcon getImage(){
 		return img;
+	}
+	
+	public Treasure getTreasure(){
+		return this.trs;
+	}
+	
+	public void setTreasure(Treasure trs){
+		this.trs = trs;
 	}
 }

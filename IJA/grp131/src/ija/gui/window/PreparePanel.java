@@ -142,7 +142,6 @@ public class PreparePanel extends JPanel implements ActionListener{
         	Game.mainFrame.setContentPane(Game.gamePanel);
         	
         } else if ("back".equals(e.getActionCommand())) {
-            System.out.println("Back Game");
         	Game.preparePanel.revalidate();
         	Game.mainFrame.setContentPane(Game.menuPanel);
         	
@@ -157,14 +156,12 @@ public class PreparePanel extends JPanel implements ActionListener{
         	
         }else if ("s5".equals(e.getActionCommand())) {
         	Game.boardSize = 5;
-        	System.out.println("P2 mam");
         }else if ("s7".equals(e.getActionCommand())) {
         	Game.boardSize = 7;
         }else if ("s9".equals(e.getActionCommand())) {
         	Game.boardSize = 9;
         }else if ("s11".equals(e.getActionCommand())) {
         	Game.boardSize = 11;
-        	System.out.println(Game.boardSize);
         }else if ("c12".equals(e.getActionCommand())) {
         	Game.cardSize = 12;
         }else if ("c24".equals(e.getActionCommand())) {

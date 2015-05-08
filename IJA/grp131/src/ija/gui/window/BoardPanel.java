@@ -47,6 +47,12 @@ public class BoardPanel extends JPanel implements ActionListener {
 	private JLabel labPlayerCard;
 	private boolean cardShown = false;
 	
+	//Memory for undo button
+	private int lastClickedX;
+	private int lastClickedY;
+	private int lastPlayerPosX;
+	private int lastPlayerPosY;
+	private boolean ifScored = false;
 	
 	// Initial position coordinates
 	int origX = 50;
@@ -64,15 +70,15 @@ public class BoardPanel extends JPanel implements ActionListener {
 		// Done button
 		JButton butDone = new JButton("Done!");
 		butDone.setActionCommand("done");
-		butDone.setBounds(600, 370, 130, 35);
+		butDone.setBounds(600, 390, 130, 35);
 		
 		butDone.addActionListener(this);
 		add(butDone);
 		
 		//Undone button
-		JButton butUndone = new JButton("Undone");
-		butUndone.setActionCommand("undone");
-		butUndone.setBounds(600, 320, 130, 35);
+		JButton butUndone = new JButton("Undo");
+		butUndone.setActionCommand("undo");
+		butUndone.setBounds(600, 340, 130, 35);
 		
 		butUndone.addActionListener(this);
 		add(butUndone);
@@ -104,10 +110,10 @@ public class BoardPanel extends JPanel implements ActionListener {
 				currentButton = new JButton("");
 				currentImage = currentField.getCard().getImage();
 				
-				if(currentField.getTreasure() == null){
+				if(currentField.getCard().getTreasure() == null){
 					currentTresLabel = new JLabel("");
 				}else{
-					currentTresImage = currentField.getTreasure().getImg();
+					currentTresImage = currentField.getCard().getTreasure().getImg();
 					currentTresLabel = new JLabel(currentTresImage);
 				}
 				
@@ -230,10 +236,10 @@ public class BoardPanel extends JPanel implements ActionListener {
 		butPlayerCard = new JButton("");
 		butPlayerCard.setOpaque(false);
 		butPlayerCard.setActionCommand("cardShow");
-		butPlayerCard.setBounds(600, 100, 130, 200);
+		butPlayerCard.setBounds(600, 120, 130, 200);
 		
 		labPlayerCard = new JLabel("", JLabel.CENTER);
-		labPlayerCard.setBounds(600, 100, 130, 200);
+		labPlayerCard.setBounds(600, 120, 130, 200);
 		
 		butPlayerCard.addActionListener(this);
 		add(butPlayerCard);
@@ -248,7 +254,8 @@ public class BoardPanel extends JPanel implements ActionListener {
 		g.setFont(new Font("Century Gothic", Font.BOLD, 20));
 		g.drawString("Player "+onTurn+" is on turn!", 580, 50);
 		g.setFont(new Font("Century Gothic", Font.BOLD, 16));
-		g.drawString("Click to show/hide card.", 580, 80);
+		g.drawString("Click to show/hide card.", 580, 110);
+		g.drawString("Player "+onTurn+" score: "+this.playerArray[onTurn-1].getScore()+" / "+Game.cardSize/Game.playersCount, 605, 75);
 	}
 	
 	@Override
@@ -265,6 +272,7 @@ public class BoardPanel extends JPanel implements ActionListener {
 			}else{
 				onTurn = 1;
 			}
+			ifScored = false;
 			alreadyUsed = false;
 			this.repaint();
 		}else if ("onBoard".equals(e.getActionCommand())) {
@@ -280,6 +288,10 @@ public class BoardPanel extends JPanel implements ActionListener {
 						if(y % 2 == 1){
 							board.shift(board.get(x+1, y+1));
 							alreadyUsed = true;
+							lastClickedX = x+1;
+							lastClickedY = y+1;
+							this.lastPlayerPosX = this.playerArray[onTurn-1].getPositionX();
+							this.lastPlayerPosY = this.playerArray[onTurn-1].getPositionY();
 							for(Player pl : this.playerArray){
 								if(y+1 == pl.getPositionY()){
 									if(x+1 == 1){
@@ -299,12 +311,15 @@ public class BoardPanel extends JPanel implements ActionListener {
 									}
 								}
 							}
-							redrawBoard();
 						}
 					} else if(y == 0 || y == Game.boardSize-1){
 						if(x % 2 == 1){
 							board.shift(board.get(x+1, y+1));
 							alreadyUsed = true;
+							lastClickedX = x+1;
+							lastClickedY = y+1;
+							this.lastPlayerPosX = this.playerArray[onTurn-1].getPositionX();
+							this.lastPlayerPosY = this.playerArray[onTurn-1].getPositionY();
 							for(Player pl : this.playerArray){
 								if(x+1 == pl.getPositionX()){
 									if(y+1 == 1){
@@ -324,10 +339,11 @@ public class BoardPanel extends JPanel implements ActionListener {
 									}
 								}
 							}
-							redrawBoard();
 						}
 					}
+					redrawBoard();
 				}
+				
 			}else{
 				// Try to move with player
 				for(Player pl : playerArray){
@@ -341,10 +357,11 @@ public class BoardPanel extends JPanel implements ActionListener {
 							lab.setLocation(but.getLocation());
 							pl.setPosition(x+1, y+1);
 							
-							if(dest.getTreasure() != null){
-								if(dest.getTreasure().equals(pl.getTreasure().getTreasure())){
+							if(dest.getCard().getTreasure() != null){
+								if(dest.getCard().getTreasure().equals(pl.getTreasure().getTreasure())){
 									pl.scored();
-									dest.setTreasure(null);
+									ifScored = true;
+									dest.getCard().setTreasure(null);
 									if(pl.getScore() == Game.cardSize/Game.playersCount){
 										// PLAYER WIN
 									}
@@ -365,6 +382,21 @@ public class BoardPanel extends JPanel implements ActionListener {
 				cardShown = true;
 			}
 			this.repaint();
+		}else if ("undo".equals(e.getActionCommand())) {
+			if(!ifScored && alreadyUsed){
+				alreadyUsed = false;
+				if(this.lastClickedX == 1){
+					board.shift(board.get(Game.boardSize, this.lastClickedY));
+				} else if(this.lastClickedX == Game.boardSize){
+					board.shift(board.get(1, this.lastClickedY));
+				} else if(this.lastClickedY == 1){
+					board.shift(board.get(this.lastClickedX, Game.boardSize));
+				} else if(this.lastClickedY == Game.boardSize){
+					board.shift(board.get(this.lastClickedX, 1));
+				}
+				this.playerArray[onTurn-1].setPosition(this.lastPlayerPosX, this.lastPlayerPosY);
+			}
+			redrawBoard();
 		}
 	}
 	
@@ -386,10 +418,10 @@ public class BoardPanel extends JPanel implements ActionListener {
 						
 				currentImage = currentField.getCard().getImage();
 				
-				if(currentField.getTreasure() == null){
+				if(currentField.getCard().getTreasure() == null){
 					currentTresLabel.setIcon(null);
 				}else{
-					currentTresImage = currentField.getTreasure().getImg();
+					currentTresImage = currentField.getCard().getTreasure().getImg();
 					currentTresLabel.setIcon(currentTresImage);
 				}
 				

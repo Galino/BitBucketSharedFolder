@@ -8,8 +8,6 @@
 
 package ija.homework2.board;
 
-import ija.homework1.treasure.*;
-
 /**
  * Class represent field on board.
  * @author Michal Klco
@@ -18,7 +16,6 @@ import ija.homework1.treasure.*;
 public class MazeField {
 	private final int row;
 	private final int col;
-	private Treasure trs;
 	
 	MazeCard card;
 	
@@ -27,24 +24,9 @@ public class MazeField {
 	 * @param row	number of row.
 	 * @param col	number of column.
 	 */
-	public MazeField(int row, int col, Treasure trs){
+	public MazeField(int row, int col){
 		this.row = row;
 		this.col = col;
-		this.trs = trs;
-	}
-	
-	
-	/**
-	 * 
-	 * @return treasure of field.
-	 */
-	public Treasure getTreasure()
-	{
-		return this.trs;
-	}
-	
-	public void setTreasure(Treasure trs){
-		this.trs = trs;
 	}
 	
 	/**

@@ -22,6 +22,7 @@ public class MazeBoard {
 	private int size;
 	private MazeField[][] fields;
 	private MazeCard freeCard;
+	private int cardSize;
 	
 	
 	/**
@@ -31,51 +32,14 @@ public class MazeBoard {
 	 */
 	public static MazeBoard createMazeBoard(int n, int cardSize){
 		MazeBoard board = new MazeBoard();
+		board.cardSize = cardSize;
 		board.size = n;
 		board.fields = new MazeField[n][n];
-		int cardID = 0;
-		
-		if (cardSize == 12 )
-		{
-			for(int i = 0; i < n; i++){
-				for(int j = 0; j < n; j++){
-
-					
-					if ((i == 0 && j == 0)||(i == n-1 && j == 0)||(i == 0 && j == n-1)||(i == n-1 && j == n-1))
-						board.fields[i][j] = new MazeField(i+1, j+1, null);
-					else
-					{
-						if (cardID < 12)
-						{
-							Treasure trs = Treasure.getTreasure(cardID);
-							System.out.println(trs);
-							
-							board.fields[i][j] = new MazeField(i+1, j+1, trs);
-							cardID++;
-						}
-						else 
-							board.fields[i][j] = new MazeField(i+1, j+1,null);
-					}
-				}
+		for(int i = 0; i < n; i++){
+			for(int j = 0; j < n; j++){
+				board.fields[i][j] = new MazeField(i+1, j+1);
 			}
 		}
-		else if (cardSize == 24)
-		{
-			for(int i = 0; i < n; i++){
-				for(int j = 0; j < n; j++){
-					
-						if (cardID < 24)
-						{
-							Treasure trs = Treasure.getTreasure(cardID);
-							
-							board.fields[i][j] = new MazeField(i+1, j+1, trs);
-							cardID++;
-						}
-						else 
-							board.fields[i][j] = new MazeField(i+1, j+1,null);
-					}
-				}			
-		}	
 		return board;
 	}
 	
@@ -184,6 +148,7 @@ public class MazeBoard {
 	{
 		int rand;
 		Random rdGen = new Random();
+		int pack = this.cardSize-1;
 		LinkedList<MazeCard> allOthers = new LinkedList<MazeCard>();
 		int Ccard =  (this.size*this.size)/3;
 		int Fcard = (this.size*this.size)/3;
@@ -192,11 +157,12 @@ public class MazeBoard {
 		{
 			for(int j = 0; j < this.size; j++)
 			{
-				
+				Random pom = new Random();
+				int putTreasure = pom.nextInt(2);
 				// Putting "C" cards on corners of board
 				if ( i == 0 && j == 0)
 				{
-					MazeCard card = MazeCard.create("C");
+					MazeCard card = MazeCard.create("C",null);
 					card.turnRight();
 					card.turnRight();
 					this.fields[i][j].putCard(card);
@@ -205,7 +171,7 @@ public class MazeBoard {
 				}
 				else if (i == 0 && j == this.size-1)
 				{
-					MazeCard card = MazeCard.create("C");
+					MazeCard card = MazeCard.create("C",null);
 					card.turnRight();
 					card.turnRight();
 					card.turnRight();
@@ -214,14 +180,14 @@ public class MazeBoard {
 				}
 				else if (i == this.size-1 && j == 0)
 				{
-					MazeCard card = MazeCard.create("C");
+					MazeCard card = MazeCard.create("C",null);
 					card.turnRight();
 					this.fields[i][j].putCard(card);
 					Ccard--;
 				}
 				else if (i == this.size-1 && j == this.size-1)
 				{
-					MazeCard card = MazeCard.create("C");
+					MazeCard card = MazeCard.create("C",null);
 					// no need to rotate
 					this.fields[i][j].putCard(card);
 					Ccard--;
@@ -232,62 +198,153 @@ public class MazeBoard {
 				// Putting "F" cards on their positions
 				else if (i == 0 && j%2 == 0)			//up edge
 				{
-					MazeCard card = MazeCard.create("F");
-					card.turnRight();
-					card.turnRight();
-					this.fields[i][j].putCard(card);
+					if (putTreasure == 1)
+					{
+						Treasure trs = Treasure.getTreasure(pack);
+						MazeCard card = MazeCard.create("F",trs);
+						pack--;
+						card.turnRight();
+						card.turnRight();
+						this.fields[i][j].putCard(card);
+					}
+					else
+					{
+						MazeCard card = MazeCard.create("F",null);
+						card.turnRight();
+						card.turnRight();
+						this.fields[i][j].putCard(card);
+					}
 					Fcard--;
 				}				
 				else if (i%2 == 0 && j == 0)			//left edge
 				{
-					MazeCard card = MazeCard.create("F");
-					card.turnRight();
-					this.fields[i][j].putCard(card);
+					if (putTreasure == 1)
+					{
+						Treasure trs = Treasure.getTreasure(pack);
+						MazeCard card = MazeCard.create("F",trs);
+						pack--;
+						card.turnRight();
+						this.fields[i][j].putCard(card);
+					}
+					else
+					{
+						MazeCard card = MazeCard.create("F",null);
+						card.turnRight();
+						this.fields[i][j].putCard(card);
+					}
 					Fcard--;
 				}
 				else if (i == this.size-1 && j%2 == 0)		//down edge
 				{
-					MazeCard card = MazeCard.create("F");
-					// no need to rotate
-					this.fields[i][j].putCard(card);
+					if (putTreasure == 1)
+					{
+						Treasure trs = Treasure.getTreasure(pack);
+						MazeCard card = MazeCard.create("F",trs);
+						pack--;
+						// no need to rotate
+						this.fields[i][j].putCard(card);
+					}
+					else
+					{
+						MazeCard card = MazeCard.create("F",null);
+						//no need to rotate
+						this.fields[i][j].putCard(card);
+					}
 					Fcard--;
 				}
 				else if (i%2 == 0 && j == this.size-1)		//right edge
 				{
-					MazeCard card = MazeCard.create("F");
-					card.turnRight();
-					card.turnRight();
-					card.turnRight();
-					this.fields[i][j].putCard(card);
+					if (putTreasure == 1)
+					{
+						Treasure trs = Treasure.getTreasure(pack);
+						MazeCard card = MazeCard.create("F",trs);
+						pack--;
+						card.turnRight();
+						card.turnRight();
+						card.turnRight();
+						this.fields[i][j].putCard(card);
+					}
+					else
+					{
+						MazeCard card = MazeCard.create("F",null);
+						card.turnRight();
+						card.turnRight();
+						card.turnRight();
+						this.fields[i][j].putCard(card);
+					}
 					Fcard--;
 				}
 				else if (i%2 == 0 && j%2 == 0)			// inwards (yeah, inward !)
 				{
-					MazeCard card = MazeCard.create("F");
-					rand = rdGen.nextInt(4);
-					for (int k = 0; k < rand; k++)
-						card.turnRight();
-					this.fields[i][j].putCard(card);
-					Fcard--;
-				}
-				else // create linked list of all others cards
-				{
-					if (Ccard > 0)
+					if (putTreasure == 1)
 					{
-						MazeCard card = MazeCard.create("C");
-						allOthers.add(card);
-						Ccard--;
-					}
-					else if (Fcard > 0)
-					{
-						MazeCard card = MazeCard.create("F");
-						allOthers.add(card);
+						Treasure trs = Treasure.getTreasure(pack);
+						MazeCard card = MazeCard.create("F",trs);
+						pack--;
+						rand = rdGen.nextInt(4);
+						for (int k = 0; k < rand; k++)
+							card.turnRight();
+						this.fields[i][j].putCard(card);
 						Fcard--;
 					}
 					else
 					{
-						MazeCard card = MazeCard.create("L");
-						allOthers.add(card);
+						MazeCard card = MazeCard.create("F",null);
+						rand = rdGen.nextInt(4);
+						for (int k = 0; k < rand; k++)
+							card.turnRight();
+						this.fields[i][j].putCard(card);
+						Fcard--;
+					}
+					
+				}
+				else // create linked list of all others cards
+				{
+					if (pack >= 0)
+					{
+						if (Ccard > 0)
+						{
+							Treasure trs = Treasure.getTreasure(pack);
+							MazeCard card = MazeCard.create("C",trs);
+							allOthers.add(card);
+							Ccard--;
+							pack--;
+						}
+						else if (Fcard > 0)
+						{
+							Treasure trs = Treasure.getTreasure(pack);
+							MazeCard card = MazeCard.create("F",trs);
+							allOthers.add(card);
+							Fcard--;
+							pack--;
+						}
+						else
+						{
+							Treasure trs = Treasure.getTreasure(pack);
+							MazeCard card = MazeCard.create("L",trs);
+							allOthers.add(card);
+							pack--;
+						}
+					}
+					else
+					{
+						if (Ccard > 0)
+						{
+							MazeCard card = MazeCard.create("C",null);
+							allOthers.add(card);
+							Ccard--;
+						}
+						else if (Fcard > 0)
+						{
+							MazeCard card = MazeCard.create("F",null);
+							allOthers.add(card);
+							Fcard--;
+						}
+						else
+						{
+							MazeCard card = MazeCard.create("L",null);
+							allOthers.add(card);
+						}
 					}
 				}				
 			} // end of for(j)
@@ -338,13 +395,13 @@ public class MazeBoard {
 		//generate freeCard
 		rand = rdGen.nextInt(3);
 		if(rand == 0){
-			this.freeCard = MazeCard.create("L");
+			this.freeCard = MazeCard.create("L",null);
 		}
 		else if(rand == 1){
-			this.freeCard = MazeCard.create("C");
+			this.freeCard = MazeCard.create("C",null);
 		}
 		else if(rand == 2){
-			this.freeCard = MazeCard.create("F");
+			this.freeCard = MazeCard.create("F",null);
 		}		
 	}
 
