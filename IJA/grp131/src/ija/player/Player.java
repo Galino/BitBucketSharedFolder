@@ -9,6 +9,7 @@ public class Player {
 	private TreasureCard treasure;
 	private int posX;
 	private int posY;
+	private int score=0;
 	
 	private ImageIcon img;
 	
@@ -71,5 +72,13 @@ public class Player {
 	
 	public ImageIcon getIcon(){
 		return img;
+	}
+	
+	public void scored(){
+		this.score++;
+	}
+	
+	public int getScore(){
+		return this.score;
 	}
 }

@@ -8,8 +8,10 @@
 
 package ija.homework2.board;
 
+
 //import ija.homework1.treasure.TreasureCard;
 import java.util.*;
+import ija.homework1.treasure.*;
 
 /**
  * Class represents game board with fields.
@@ -21,20 +23,59 @@ public class MazeBoard {
 	private MazeField[][] fields;
 	private MazeCard freeCard;
 	
+	
 	/**
 	 * Static method for creating game board.
 	 * @param 	n	size of board (it will contain n*n fields).
 	 * @return	board.
 	 */
-	public static MazeBoard createMazeBoard(int n){
+	public static MazeBoard createMazeBoard(int n, int cardSize){
 		MazeBoard board = new MazeBoard();
 		board.size = n;
 		board.fields = new MazeField[n][n];
-		for(int i = 0; i < n; i++){
-			for(int j = 0; j < n; j++){
-				board.fields[i][j] = new MazeField(i+1, j+1);
+		int cardID = 0;
+		
+		if (cardSize == 12 )
+		{
+			for(int i = 0; i < n; i++){
+				for(int j = 0; j < n; j++){
+
+					
+					if ((i == 0 && j == 0)||(i == n-1 && j == 0)||(i == 0 && j == n-1)||(i == n-1 && j == n-1))
+						board.fields[i][j] = new MazeField(i+1, j+1, null);
+					else
+					{
+						if (cardID < 12)
+						{
+							Treasure trs = Treasure.getTreasure(cardID);
+							System.out.println(trs);
+							
+							board.fields[i][j] = new MazeField(i+1, j+1, trs);
+							cardID++;
+						}
+						else 
+							board.fields[i][j] = new MazeField(i+1, j+1,null);
+					}
+				}
 			}
 		}
+		else if (cardSize == 24)
+		{
+			for(int i = 0; i < n; i++){
+				for(int j = 0; j < n; j++){
+					
+						if (cardID < 24)
+						{
+							Treasure trs = Treasure.getTreasure(cardID);
+							
+							board.fields[i][j] = new MazeField(i+1, j+1, trs);
+							cardID++;
+						}
+						else 
+							board.fields[i][j] = new MazeField(i+1, j+1,null);
+					}
+				}			
+		}	
 		return board;
 	}
 	

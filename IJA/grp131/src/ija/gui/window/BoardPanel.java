@@ -31,6 +31,7 @@ public class BoardPanel extends JPanel implements ActionListener {
 	
 	private JButton[] butArray;		// array of buttons on board
 	private JLabel[] boardLabels;	// board fields
+	private JLabel[] tresLabels;
 	private JButton butFreeCard;	
 	private JLabel labFreeCard;
 	
@@ -41,7 +42,11 @@ public class BoardPanel extends JPanel implements ActionListener {
 	
 	// Treasure cards
 	private CardPack cardDeck;
-	private JLabel[] tresLabels;
+	
+	private JButton butPlayerCard;
+	private JLabel labPlayerCard;
+	private boolean cardShown = false;
+	
 	
 	// Initial position coordinates
 	int origX = 50;
@@ -59,23 +64,38 @@ public class BoardPanel extends JPanel implements ActionListener {
 		// Done button
 		JButton butDone = new JButton("Done!");
 		butDone.setActionCommand("done");
-		butDone.setBounds(600, 380, 130, 35);
+		butDone.setBounds(600, 370, 130, 35);
 		
 		butDone.addActionListener(this);
 		add(butDone);
 		
+		//Undone button
+		JButton butUndone = new JButton("Undone");
+		butUndone.setActionCommand("undone");
+		butUndone.setBounds(600, 320, 130, 35);
+		
+		butUndone.addActionListener(this);
+		add(butUndone);
+		
+		// Create card deck
+		cardDeck = new CardPack(24, Game.cardSize);
+		cardDeck.shuffle();
+		
 		// Create new board
-		board = MazeBoard.createMazeBoard(Game.boardSize);
+		board = MazeBoard.createMazeBoard(Game.boardSize, Game.cardSize);
 		board.newGame();
 		
 		//Draw Board
 		butArray = new JButton[Game.boardSize*Game.boardSize];
 		boardLabels = new JLabel[Game.boardSize*Game.boardSize];
+		tresLabels = new JLabel[Game.boardSize*Game.boardSize];
 		
 		MazeField currentField;
 		JButton currentButton;
 		ImageIcon currentImage;
+		ImageIcon currentTresImage;
 		JLabel currentLabel;
+		JLabel currentTresLabel;
 
 		for(int x = 0; x < Game.boardSize; x++){
 			for(int y = 0; y < Game.boardSize; y++){
@@ -83,6 +103,14 @@ public class BoardPanel extends JPanel implements ActionListener {
 						
 				currentButton = new JButton("");
 				currentImage = currentField.getCard().getImage();
+				
+				if(currentField.getTreasure() == null){
+					currentTresLabel = new JLabel("");
+				}else{
+					currentTresImage = currentField.getTreasure().getImg();
+					currentTresLabel = new JLabel(currentTresImage);
+				}
+				
 				currentButton.setOpaque(false);
 				currentButton.setBounds(origX+(x*butSize), origY+(y*butSize), butSize, butSize);
 				currentButton.setActionCommand("onBoard");
@@ -92,11 +120,17 @@ public class BoardPanel extends JPanel implements ActionListener {
 						java.awt.Image.SCALE_SMOOTH)));
 				currentLabel.setBounds(origX+(x*butSize), origY+(y*butSize), butSize, butSize);
 				
+				currentTresLabel.setBounds(origX+(x*butSize), origY+(y*butSize), butSize, butSize);
+				
 				add(currentLabel);
+				add(currentTresLabel);
 				add(currentButton);
+				
+				this.setComponentZOrder(currentTresLabel, 1);
 				
 				butArray[x*Game.boardSize + y] = currentButton;
 				boardLabels[x*Game.boardSize + y] = currentLabel;
+				this.tresLabels[x*Game.boardSize + y] = currentTresLabel;
 			}
 		}
 			
@@ -151,16 +185,17 @@ public class BoardPanel extends JPanel implements ActionListener {
 			playerLabels[i-1] = currentLabel;
 		}
 		
-		// Create card deck and Treasures
-		cardDeck = new CardPack(24, Game.cardSize);
-		cardDeck.shuffle();
 		
-		int x,y;
+		// Give treasure card to each player
+		for(Player pl : this.playerArray){
+			pl.setTreasure(cardDeck.popCard());
+		}
+		
+		/*int x,y;
 		tresLabels = new JLabel[Game.cardSize];
 	
 		for(int i = 0; i < Game.cardSize; i++){
-			currentLabel = new JLabel(new ImageIcon(Treasure.getTreasure(i).getImg().getImage().getScaledInstance( butSize, butSize,
-					java.awt.Image.SCALE_SMOOTH)));
+			currentLabel = new JLabel(Treasure.getTreasure(i).getImg());
 			
 			Random rd = new Random();
 			// generate numbers from 1 to Game.boardSize-1
@@ -174,20 +209,36 @@ public class BoardPanel extends JPanel implements ActionListener {
 			for(JLabel lab : tresLabels){
 				if(lab != null){
 					if(! lab.equals(currentLabel)){
-						while(lab.getBounds().equals(currentLabel.getBounds())){
+						while((int) lab.getLocation().getX() == (int) currentLabel.getLocation().getX() &&
+								(int) lab.getLocation().getY() == (int) currentLabel.getLocation().getY()){
 							x = rd.nextInt(Game.boardSize-2)+1;
 							y = rd.nextInt(Game.boardSize-2)+1;
 							currentButton = butArray[x*Game.boardSize + y];
 							currentLabel.setBounds(currentButton.getBounds());
+							
 						}
 					}
 				}
 			}
-			// ESTE VYBAV POSUN SPOLU S KAMENMI
 			add(currentLabel);
 			this.setComponentZOrder(currentLabel, 0);
 			tresLabels[i] = currentLabel;
-		}
+		}*/
+		
+		// Create player's card appearance
+		currentPlayer = this.playerArray[onTurn-1];
+		butPlayerCard = new JButton("");
+		butPlayerCard.setOpaque(false);
+		butPlayerCard.setActionCommand("cardShow");
+		butPlayerCard.setBounds(600, 100, 130, 200);
+		
+		labPlayerCard = new JLabel("", JLabel.CENTER);
+		labPlayerCard.setBounds(600, 100, 130, 200);
+		
+		butPlayerCard.addActionListener(this);
+		add(butPlayerCard);
+		add(labPlayerCard);
+		this.setComponentZOrder(labPlayerCard, 0);
 		
 	}
 
@@ -196,6 +247,8 @@ public class BoardPanel extends JPanel implements ActionListener {
 		super.paintComponent(g);g.setColor(Color.BLACK);
 		g.setFont(new Font("Century Gothic", Font.BOLD, 20));
 		g.drawString("Player "+onTurn+" is on turn!", 580, 50);
+		g.setFont(new Font("Century Gothic", Font.BOLD, 16));
+		g.drawString("Click to show/hide card.", 580, 80);
 	}
 	
 	@Override
@@ -271,15 +324,6 @@ public class BoardPanel extends JPanel implements ActionListener {
 									}
 								}
 							}
-							/*for(JLabel lab : this.tresLabels){
-								if(y==0){
-									if(lab.getLocation().getX() == but.getLocation().getX()){
-										if(lab.getLocation().getY() + butSize > origY+(butSize*(Game.boardSize-1))){
-											
-										}
-									}
-								}
-							}*/
 							redrawBoard();
 						}
 					}
@@ -296,11 +340,31 @@ public class BoardPanel extends JPanel implements ActionListener {
 							JLabel lab = playerLabels[pl.getId()-1];
 							lab.setLocation(but.getLocation());
 							pl.setPosition(x+1, y+1);
+							
+							if(dest.getTreasure() != null){
+								if(dest.getTreasure().equals(pl.getTreasure().getTreasure())){
+									pl.scored();
+									dest.setTreasure(null);
+									if(pl.getScore() == Game.cardSize/Game.playersCount){
+										// PLAYER WIN
+									}
+								}
+							}
 						}
 					}
+					redrawBoard();
 				}
 			}
 					
+		}else if ("cardShow".equals(e.getActionCommand())) {
+			if(cardShown){
+				labPlayerCard.setIcon(null);
+				cardShown = false;
+			}else {
+				labPlayerCard.setIcon(this.playerArray[onTurn-1].getTreasure().getTreasure().getImg());
+				cardShown = true;
+			}
+			this.repaint();
 		}
 	}
 	
@@ -308,16 +372,27 @@ public class BoardPanel extends JPanel implements ActionListener {
 
 		MazeField currentField;
 		JLabel currentLabel;
+		JLabel currentTresLabel;
 		ImageIcon currentImage;
+		ImageIcon currentTresImage;
 		JButton currentButton;
 		
 		for(int x = 0; x < Game.boardSize; x++){
 			for(int y = 0; y < Game.boardSize; y++){
 				currentLabel = boardLabels[x*Game.boardSize + y];
+				currentTresLabel = this.tresLabels[x*Game.boardSize + y];
 				
 				currentField = board.get(x+1, y+1);
 						
 				currentImage = currentField.getCard().getImage();
+				
+				if(currentField.getTreasure() == null){
+					currentTresLabel.setIcon(null);
+				}else{
+					currentTresImage = currentField.getTreasure().getImg();
+					currentTresLabel.setIcon(currentTresImage);
+				}
+				
 				currentLabel.setIcon(new ImageIcon(currentImage.getImage().getScaledInstance( butSize, butSize,
 																				java.awt.Image.SCALE_SMOOTH)));
 				
