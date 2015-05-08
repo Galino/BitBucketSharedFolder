@@ -1,7 +1,5 @@
 package ija.gui.window;
 
-import ija.MainFrame;
-
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics;

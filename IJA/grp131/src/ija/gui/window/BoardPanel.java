@@ -216,6 +216,7 @@ public class BoardPanel extends JPanel implements ActionListener {
 			this.repaint();
 		}else if ("onBoard".equals(e.getActionCommand())) {
 			Object button = e.getSource();
+			JButton but = (JButton) button;
 			int index = Arrays.asList(butArray).indexOf(button);
 			if(!alreadyUsed){	
 				//Place free card on chosen fied if can
@@ -225,14 +226,61 @@ public class BoardPanel extends JPanel implements ActionListener {
 					if(x == 0 || x == Game.boardSize-1){
 						if(y % 2 == 1){
 							board.shift(board.get(x+1, y+1));
-							redrawBoard();
 							alreadyUsed = true;
+							for(Player pl : this.playerArray){
+								if(y+1 == pl.getPositionY()){
+									if(x+1 == 1){
+										if(pl.getPositionX()+1 <= Game.boardSize){
+											pl.setPosition(pl.getPositionX()+1, pl.getPositionY());
+										}
+										else{
+											pl.setPosition(1, Game.boardSize);
+										}
+									} else if(x+1 == Game.boardSize){
+										if(pl.getPositionX()-1 >= 1){
+											pl.setPosition(pl.getPositionX()-1, pl.getPositionY());
+										}
+										else{
+											pl.setPosition(Game.boardSize,pl.getPositionY());
+										}
+									}
+								}
+							}
+							redrawBoard();
 						}
 					} else if(y == 0 || y == Game.boardSize-1){
 						if(x % 2 == 1){
 							board.shift(board.get(x+1, y+1));
-							redrawBoard();
 							alreadyUsed = true;
+							for(Player pl : this.playerArray){
+								if(x+1 == pl.getPositionX()){
+									if(y+1 == 1){
+										if(pl.getPositionY()+1 <= Game.boardSize){
+											pl.setPosition(pl.getPositionX(), pl.getPositionY()+1);
+										}
+										else{
+											pl.setPosition(pl.getPositionX(), 1);
+										}
+									} else if(y+1 == Game.boardSize){
+										if(pl.getPositionY()-1 >= 1){
+											pl.setPosition(pl.getPositionX(), pl.getPositionY()-1);
+										}
+										else{
+											pl.setPosition(pl.getPositionX(),Game.boardSize);
+										}
+									}
+								}
+							}
+							/*for(JLabel lab : this.tresLabels){
+								if(y==0){
+									if(lab.getLocation().getX() == but.getLocation().getX()){
+										if(lab.getLocation().getY() + butSize > origY+(butSize*(Game.boardSize-1))){
+											
+										}
+									}
+								}
+							}*/
+							redrawBoard();
 						}
 					}
 				}
@@ -246,8 +294,8 @@ public class BoardPanel extends JPanel implements ActionListener {
 						MazeField dest = board.get(x+1, y+1);
 						if(board.path(src, dest)){
 							JLabel lab = playerLabels[pl.getId()-1];
-							JButton but = (JButton) button;
 							lab.setLocation(but.getLocation());
+							pl.setPosition(x+1, y+1);
 						}
 					}
 				}
@@ -261,6 +309,7 @@ public class BoardPanel extends JPanel implements ActionListener {
 		MazeField currentField;
 		JLabel currentLabel;
 		ImageIcon currentImage;
+		JButton currentButton;
 		
 		for(int x = 0; x < Game.boardSize; x++){
 			for(int y = 0; y < Game.boardSize; y++){
@@ -271,12 +320,19 @@ public class BoardPanel extends JPanel implements ActionListener {
 				currentImage = currentField.getCard().getImage();
 				currentLabel.setIcon(new ImageIcon(currentImage.getImage().getScaledInstance( butSize, butSize,
 																				java.awt.Image.SCALE_SMOOTH)));
+				
+				for(Player pl : this.playerArray){
+					if(pl.getPositionX() == x+1 && pl.getPositionY() == y+1){
+						currentButton = butArray[x*Game.boardSize + y];
+						this.playerLabels[pl.getId()-1].setLocation(currentButton.getLocation());
+					}
+				}
 			}
 		}
 				
 		currentImage = board.getFreeCard().getImage();
 		labFreeCard.setIcon(new ImageIcon(currentImage.getImage().getScaledInstance( butSize, butSize,
 																		java.awt.Image.SCALE_SMOOTH)));
-		
+		this.repaint();
 	}
 }
