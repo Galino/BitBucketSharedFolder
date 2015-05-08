@@ -8,7 +8,12 @@
 
 package ija.homework2.board;
 
+import java.awt.Graphics2D;
+import java.awt.geom.AffineTransform;
+import java.awt.image.BufferedImage;
 import java.lang.IllegalArgumentException;
+
+import javax.swing.ImageIcon;
 
 /**
  * Class represents cards placed on fields on board.
@@ -21,6 +26,8 @@ public class MazeCard {
 	CANGO firstDir;
 	CANGO secondDir;
 	CANGO thirdDir;
+	
+	private ImageIcon img;
 	
 	public static enum CANGO{
 		LEFT, UP, RIGHT, DOWN;
@@ -42,16 +49,23 @@ public class MazeCard {
 				card.firstDir = CANGO.UP;
 				card.secondDir = CANGO.LEFT;
 				card.thirdDir = null;
+				card.img = new ImageIcon(card.getClass().getResource("/images/tile3.png"));
 				break;
 			case "L":
 				card.firstDir = CANGO.LEFT;
 				card.secondDir = CANGO.RIGHT;
 				card.thirdDir = null;
+				card.img = new ImageIcon(card.getClass().getResource("/images/tile1.png"));
+				//card.turnRightImage();
+				
 				break;
 			case "F":
 				card.firstDir = CANGO.LEFT;
 				card.secondDir = CANGO.UP;
 				card.thirdDir = CANGO.RIGHT;
+				card.img = new ImageIcon(card.getClass().getResource("/images/tile2.png"));
+				//card.turnRightImage();
+				//card.turnRightImage();
 				break;
 		}
 		
@@ -114,7 +128,23 @@ public class MazeCard {
 				}
 				break;
 		}
+		this.turnRightImage();
 	}
+	
+	private void turnRightImage() {
+        int w = this.img.getIconWidth();
+        int h = this.img.getIconHeight();
+        int type = BufferedImage.TYPE_INT_RGB;  // other options, see api
+        BufferedImage image = new BufferedImage(h, w, type);
+        Graphics2D g2 = image.createGraphics();
+        double x = (h - w)/2.0;
+        double y = (w - h)/2.0;
+        AffineTransform at = AffineTransform.getTranslateInstance(x, y);
+        at.rotate(Math.toRadians(-90), w/2.0, h/2.0);
+        g2.drawImage(img.getImage(), at, null);
+        g2.dispose();
+        this.img = new ImageIcon(image);
+    }
 	
 	/**
 	 * Method inspects if card can be leaved in chosen direction.
@@ -126,5 +156,9 @@ public class MazeCard {
 			return true;
 		else
 			return false;
+	}
+	
+	public ImageIcon getImage(){
+		return img;
 	}
 }

@@ -56,6 +56,9 @@ public class TreasureCard {
 		return true;
 	}
 	
+	public Treasure getTreasure(){
+		return this.tr;
+	}
 	
 	
 }

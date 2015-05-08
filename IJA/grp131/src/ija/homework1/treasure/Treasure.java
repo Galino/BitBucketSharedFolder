@@ -8,6 +8,11 @@
 
 package ija.homework1.treasure;
 
+import java.io.File;
+import java.io.IOException;
+
+import javax.swing.ImageIcon;
+
 /*
  * Represents treasure on card (various items)
  */
@@ -16,6 +21,7 @@ public class Treasure {
 	private static Treasure[] treasureSet;
 	private static int treasureCount = 24;
 	
+	private ImageIcon img;
 	private int treasureCode;
 	
 	/*
@@ -33,8 +39,24 @@ public class Treasure {
 	public static void createSet(){
 		treasureSet = new Treasure[treasureCount];
 		
-		for(int i = 0; i < treasureCount; i++){
-			treasureSet[i] = new Treasure(i);
+		Treasure currentTreasure;
+		int i = 0;
+		
+		File imgDir = new File("./images/objects/");
+		
+		for(File fileImg : imgDir.listFiles()){
+			if(i >= treasureCount){
+				break;
+			}
+			currentTreasure = new Treasure(i);
+			
+			String name = fileImg.getPath();
+			name = name.replace(".\\","\\");
+			name = name.replace("\\", "/");
+			
+			currentTreasure.setImg(new ImageIcon(currentTreasure.getClass().getResource(name)));
+			treasureSet[i] = currentTreasure;
+			i++;
 		}
 	}
 	
@@ -62,5 +84,13 @@ public class Treasure {
 	 */
 	public int getTreasureCode(){
 		return this.treasureCode;
+	}
+	
+	public void setImg(ImageIcon img){
+		this.img = img;
+	}
+	
+	public ImageIcon getImg(){
+		return this.img;
 	}
 }

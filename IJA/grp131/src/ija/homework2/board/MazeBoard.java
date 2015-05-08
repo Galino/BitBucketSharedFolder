@@ -9,9 +9,6 @@
 package ija.homework2.board;
 
 //import ija.homework1.treasure.TreasureCard;
-
-import ija.homework2.board.MazeCard.CANGO;
-
 import java.util.*;
 
 /**

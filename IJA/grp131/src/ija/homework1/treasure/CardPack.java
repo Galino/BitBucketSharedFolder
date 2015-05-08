@@ -65,4 +65,12 @@ public class CardPack {
 			cardDeck.set(i, card);
 		}
 	}
+	
+	/*
+	 * Return card on given index (starts with 0)
+	 * @param index		- index of wanted card
+	 */
+	public TreasureCard getCard(int index){
+		return cardDeck.get(index);
+	}
 }
